@@ -16,7 +16,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_instance" "ovpn" {
   ami           = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.micro"
+  instance_type = "t2.nano"
 
   associate_public_ip_address = true
   source_dest_check = false
@@ -27,7 +27,7 @@ resource "aws_instance" "ovpn" {
   user_data = "${data.template_file.deployment_shell_script.rendered}"
 
   provisioner "local-exec" {
-    command = "rm -f ./${aws_instance.ovpn.id}.ovpn && sleep 180 && scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${aws_instance.ovpn.public_ip}:/etc/openvpn/client.ovpn ./${aws_instance.ovpn.id}.ovpn"
+    command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn && sleep 180 && scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${aws_instance.ovpn.public_ip}:/etc/openvpn/client.ovpn ${var.client_config_path}/${var.client_config_name}.ovpn"
   }
 
   tags {
@@ -37,6 +37,11 @@ resource "aws_instance" "ovpn" {
 
 data "template_file" "deployment_shell_script" {
   template = "${file("userdata.sh")}"
+
+  vars {
+    cert_details = "${file("cert_details")}"
+    client_config_name = "${var.client_config_name}"
+  }
 }
 
 resource "aws_key_pair" "ec2-key" {

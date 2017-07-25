@@ -28,6 +28,8 @@ COMMIT
 
 $(cat /etc/ufw/before.rules)" > /etc/ufw/before.rules
 
+sed -i.bak s/DEFAULT_FORWARD_POLICY=\"DROP\"/DEFAULT_FORWARD_POLICY=\"ACCEPT\"/g /etc/default/ufw
+
 ufw reload
 
 echo "Enable IP forwarding ..."
@@ -70,12 +72,8 @@ echo "Creating certs ..."
 make-cadir /etc/openvpn/easy-rsa/
 
 cat >>/etc/openvpn/easy-rsa/vars <<EOF
-export KEY_COUNTRY="CA"
-export KEY_PROVINCE="ON"
-export KEY_CITY="Waterloo"
-export KEY_ORG="Aperture Science"
-export KEY_EMAIL="scientist@aperturescience.com"
-export KEY_OU="Advanced Weaponry"
+${cert_details}
+export KEY_NAME="${client_config_name}"
 EOF
 
 pushd /etc/openvpn/easy-rsa/

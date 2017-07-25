@@ -5,9 +5,17 @@ variable "region" {
 }
 
 variable "private_key_file" {
-  default = "./ovpn"
+  default = "./certs/ovpn"
 }
 
 variable "public_key_file" {
-  default = "./ovpn.pub"
+  default = "./certs/ovpn.pub"
+}
+
+variable "client_config_path" {
+  default = "./client_configs"
+}
+
+variable "client_config_name" {
+  default = "ovpn-client"
 }

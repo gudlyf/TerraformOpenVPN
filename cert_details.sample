@@ -1,0 +1,6 @@
+export KEY_COUNTRY="XX" # Country
+export KEY_PROVINCE="XX" # 2-letter State / Province
+export KEY_CITY="XXXX" # City
+export KEY_ORG="XXXX" # Organization / Company
+export KEY_EMAIL="XXX@XXX.XXX" # E-Mail address
+export KEY_OU="XX" # Department

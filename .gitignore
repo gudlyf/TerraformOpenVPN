@@ -6,5 +6,8 @@
 .terraform/
 
 # Certs
-ovpn
-ovpn.pub
+certs/*
+client_configs/*
+
+# Other
+cert_details

@@ -4,3 +4,7 @@
 
 # Module directory
 .terraform/
+
+# Certs
+ovpn
+ovpn.pub

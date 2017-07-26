@@ -1,7 +1,7 @@
 # TerraformAWSOpenVPN
 Terraform scripts to create a quick OpenVPN server in AWS. Can be trivially modified to work with other cloud providers.
 
-### Steps for use:
+### Steps for use
 
 1. [Download Terraform](https://www.terraform.io/downloads.html).
 2. Be sure your AWS profile is setup (i.e., `$HOME/.aws/config`).
@@ -15,3 +15,9 @@ Terraform scripts to create a quick OpenVPN server in AWS. Can be trivially modi
 5. Customize the region in `variables.tf` as needed (default is `ca-central-1`).
 6. `terraform plan && terraform apply`
 7. New `.ovpn` file will be copied from new instance. Open with your OpenVPN client.
+
+### To Do
+
+- Better, more secure cert generation
+- Flag for "only allow this IP to connect" to either SSH and/or OpenVPN
+- Finish `fail2ban` configuration

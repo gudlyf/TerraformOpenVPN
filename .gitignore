@@ -5,9 +5,5 @@
 # Module directory
 .terraform/
 
-# Certs
-certs/*
-client_configs/*
-
 # Other
 cert_details

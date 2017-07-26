@@ -18,6 +18,5 @@ Terraform scripts to create a quick OpenVPN server in AWS. Can be trivially modi
 
 ### To Do
 
-- Better, more secure cert generation
 - Flag for "only allow this IP to connect" to either SSH and/or OpenVPN
 - Finish `fail2ban` configuration

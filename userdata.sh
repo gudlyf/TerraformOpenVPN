@@ -108,6 +108,7 @@ keepalive 10 120
 nobind
 user nobody
 group nogroup
+cipher AES-256-CBC
 persist-key
 persist-tun
 ns-cert-type server

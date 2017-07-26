@@ -8,6 +8,7 @@ Terraform scripts to create a quick OpenVPN server in AWS. Can be trivially modi
 3. Create your SSH keys:
 
 `cd TerraformAWSOpenVPN`
+
 `ssh-keygen -N '' -f ./certs/ovpn`
 
 4. Edit your own `cert_details` (use `cert_details.sample` as template)

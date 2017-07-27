@@ -49,6 +49,8 @@ ca ca.crt
 cert server.crt
 key server.key
 dh dh2048.pem
+cipher AES-256-CBC
+keysize 256
 server 192.168.51.0 255.255.255.0
 ifconfig-pool-persist ipp.txt
 push "redirect-gateway def1 bypass-dhcp"
@@ -109,6 +111,7 @@ nobind
 user nobody
 group nogroup
 cipher AES-256-CBC
+keysize 256
 persist-key
 persist-tun
 ns-cert-type server

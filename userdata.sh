@@ -104,7 +104,7 @@ cat > /etc/openvpn/client.ovpn <<EOF
 client
 dev tun
 proto udp
-remote $(curl http://ifconfig.co) 1194
+remote $(curl http://169.254.169.254/latest/meta-data/public-ipv4) 1194
 resolv-retry infinite
 keepalive 10 120
 nobind

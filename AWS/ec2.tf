@@ -34,7 +34,7 @@ resource "aws_instance" "ovpn" {
 
   provisioner "local-exec" {
     command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn"
-    when = destroy
+    when = "destroy"
   }
 
   tags {

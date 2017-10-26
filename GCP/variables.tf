@@ -7,17 +7,21 @@ variable "zone" {
 }
 
 variable "private_key_file" {
-  default = "./certs/ovpn"
+  default = "../certs/ovpn"
 }
 
 variable "public_key_file" {
-  default = "./certs/ovpn.pub"
+  default = "../certs/ovpn.pub"
 }
 
 variable "client_config_path" {
-  default = "./client_configs"
+  default = "../client_configs"
 }
 
 variable "client_config_name" {
   default = "google-ovpn"
+}
+
+variable "cert_details" {
+  default = "../cert_details"
 }

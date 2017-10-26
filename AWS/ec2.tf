@@ -26,8 +26,15 @@ resource "aws_instance" "ovpn" {
 
   user_data = "${data.template_file.deployment_shell_script.rendered}"
 
+  ## TO DO: Consider adding a remote-exec to come before next local-exec in place of the sleep
+
   provisioner "local-exec" {
-    command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn && sleep 180 && scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${aws_instance.ovpn.public_ip}:/etc/openvpn/client.ovpn ${var.client_config_path}/${var.client_config_name}.ovpn"
+    command = "sleep 180 && scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${aws_instance.ovpn.public_ip}:/etc/openvpn/client.ovpn ${var.client_config_path}/${var.client_config_name}.ovpn"
+  }
+
+  provisioner "local-exec" {
+    command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn"
+    when = destroy
   }
 
   tags {
@@ -39,7 +46,7 @@ data "template_file" "deployment_shell_script" {
   template = "${file("userdata.sh")}"
 
   vars {
-    cert_details = "${file("cert_details")}"
+    cert_details = "${file(var.cert_details)}"
     client_config_name = "${var.client_config_name}"
   }
 }

@@ -1,7 +1,13 @@
-variable "profile" {}
+variable "location" {
+  default = "Canada East"
+}
 
-variable "region" {
-  default = "ca-central-1"
+variable "hostname" {
+  default = "openvpn"
+}
+
+variable "admin_username" {
+  default = "ubuntu"
 }
 
 variable "private_key_file" {
@@ -17,7 +23,7 @@ variable "client_config_path" {
 }
 
 variable "client_config_name" {
-  default = "ovpn-client"
+  default = "azure-ovpn"
 }
 
 variable "cert_details" {

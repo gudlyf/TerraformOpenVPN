@@ -6,4 +6,7 @@
 .terraform/
 
 # Other
+certs/*
+client_configs/*
 cert_details
+.idea/*

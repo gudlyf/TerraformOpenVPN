@@ -3,7 +3,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
   }
 
   filter {
@@ -26,10 +26,24 @@ resource "aws_instance" "ovpn" {
 
   user_data = "${data.template_file.deployment_shell_script.rendered}"
 
-  ## TO DO: Consider adding a remote-exec to come before next local-exec in place of the sleep
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Waiting for client config ...'",
+      "while [ ! -f /etc/openvpn/client.ovpn ]; do sleep 5; done",
+      "echo 'DONE!'"
+    ]
+
+    connection {
+      host        = "${aws_instance.ovpn.public_ip}"
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file("${var.private_key_file}")}"
+      timeout     = "1m"
+    }
+  }
 
   provisioner "local-exec" {
-    command = "sleep 180 && scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${aws_instance.ovpn.public_ip}:/etc/openvpn/client.ovpn ${var.client_config_path}/${var.client_config_name}.ovpn"
+    command = "scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${aws_instance.ovpn.public_ip}:/etc/openvpn/client.ovpn ${var.client_config_path}/${var.client_config_name}.ovpn"
   }
 
   provisioner "local-exec" {

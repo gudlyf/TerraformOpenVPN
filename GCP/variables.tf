@@ -1,9 +1,13 @@
 variable "region" {
-  default = "us-east1"
+  default = "northamerica-northeast1"
 }
 
 variable "zone" {
-  default = "us-east1-b"
+  default = "northamerica-northeast1-a"
+}
+
+variable 'project' {
+  default = "terraform-vpn"
 }
 
 variable "private_key_file" {
@@ -19,7 +23,7 @@ variable "client_config_path" {
 }
 
 variable "client_config_name" {
-  default = "google-ovpn"
+  default = "gcp-ovpn-client"
 }
 
 variable "cert_details" {

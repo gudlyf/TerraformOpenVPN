@@ -1,5 +1,5 @@
 provider "google" {
-  credentials = "${file("account.json")}"
-  project     = "terraform-vpn"
+# credentials = "${file("account.json")}"
+  project     = "${var.project}"
   region      = "${var.region}"
 }

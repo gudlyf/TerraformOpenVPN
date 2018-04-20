@@ -1,5 +1,17 @@
 echo "Starting Build Process"
 
+echo "Reset DNS settings ..."
+
+echo "supersede domain-name-servers 1.1.1.1, 9.9.9.9;" >> /etc/dhcp/dhclient.conf
+
+dhclient -r -v eth0 && rm /var/lib/dhcp/dhclient.* ; dhclient -v eth0
+
+echo "Adding official OpenVPN Distro ..."
+
+wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg|apt-key add -
+
+echo "deb http://build.openvpn.net/debian/openvpn/stable `lsb_release -cs` main" > /etc/apt/sources.list.d/openvpn-aptrepo.list
+
 echo "Fully update ..."
 
 apt-get update && apt-get -y dist-upgrade
@@ -48,15 +60,14 @@ cert server.crt
 key server.key
 dh dh2048.pem
 cipher AES-256-CBC
-keysize 256
 server 192.168.51.0 255.255.255.0
 ifconfig-pool-persist ipp.txt
 push "redirect-gateway def1 bypass-dhcp"
-push "dhcp-option DNS 8.8.8.8"
-push "dhcp-option DNS 8.8.4.4"
+push "dhcp-option DNS 1.1.1.1"
+push "dhcp-option DNS 9.9.9.9"
 duplicate-cn
 keepalive 10 120
-comp-lzo
+compress
 max-clients 5
 user nobody
 group nogroup
@@ -93,8 +104,8 @@ popd
 
 echo "Starting and enabling OpenVPN ..."
 
-service openvpn start
-update-rc.d openvpn enable
+systemctl enable openvpn.service
+systemctl start openvpn.service
 
 echo "Creating client file ..."
 
@@ -102,18 +113,17 @@ cat > /etc/openvpn/client.ovpn <<EOF
 client
 dev tun
 proto udp
-remote $(curl http://ifconfig.co) 1194
+remote $(curl -H "Metadata-Flavor: Google" http://metadata/computeMetadata/v1/instance/network-interfaces/0/access-configs/0/external-ip) 1194
 resolv-retry infinite
 keepalive 10 120
 nobind
 user nobody
 group nogroup
 cipher AES-256-CBC
-keysize 256
 persist-key
 persist-tun
-ns-cert-type server
-comp-lzo
+remote-cert-tls server
+compress lz4
 verb 3
 key-direction 1
 <ca>

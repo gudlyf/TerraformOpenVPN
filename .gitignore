@@ -6,7 +6,7 @@
 .terraform/
 
 # Other
-certs/*
-client_configs/*
+certs/ovpn*
+client_configs/*.ovpn
 cert_details
 .idea/*

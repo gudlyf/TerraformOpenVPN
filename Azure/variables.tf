@@ -23,7 +23,7 @@ variable "client_config_path" {
 }
 
 variable "client_config_name" {
-  default = "azure-ovpn"
+  default = "azure-ovpn-client"
 }
 
 variable "cert_details" {

@@ -6,7 +6,7 @@ variable "zone" {
   default = "northamerica-northeast1-a"
 }
 
-variable 'project' {
+variable "project" {
   default = "terraform-vpn"
 }
 

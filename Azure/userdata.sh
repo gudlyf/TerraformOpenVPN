@@ -2,11 +2,13 @@
 
 echo "Starting Build Process"
 
+INTERFACE=$(route | grep '^default' | grep -o '[^ ]*$')
+
 echo "Reset DNS settings ..."
 
 echo "supersede domain-name-servers 1.1.1.1, 9.9.9.9;" >> /etc/dhcp/dhclient.conf
 
-dhclient -r -v eth0 && rm /var/lib/dhcp/dhclient.* ; dhclient -v eth0
+dhclient -r -v $INTERFACE && rm /var/lib/dhcp/dhclient.* ; dhclient -v $INTERFACE
 
 echo "Adding official OpenVPN Distro ..."
 
@@ -33,8 +35,8 @@ echo "# START OPENVPN RULES
 # NAT table rules
 *nat
 :POSTROUTING ACCEPT [0:0]
-# Allow traffic from OpenVPN client to eth0
--A POSTROUTING -s 192.168.51.0/28 -o eth0 -j MASQUERADE
+# Allow traffic from OpenVPN client to $INTERFACE
+-A POSTROUTING -s 192.168.53.0/28 -o $INTERFACE -j MASQUERADE
 COMMIT
 # END OPENVPN RULES
 
@@ -56,20 +58,22 @@ port 1194
 proto udp
 dev tun
 tls-server
-tls-auth ta.key 0
+tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
+cipher AES-256-CBC
+auth SHA512
+tls-crypt ta.key
+tls-version-min 1.2
 ca ca.crt
 cert server.crt
 key server.key
 dh dh2048.pem
-cipher AES-256-CBC
-server 192.168.51.0 255.255.255.0
-ifconfig-pool-persist ipp.txt
+topology subnet
+server 192.168.53.0 255.255.255.0
 push "redirect-gateway def1 bypass-dhcp"
 push "dhcp-option DNS 1.1.1.1"
 push "dhcp-option DNS 9.9.9.9"
 duplicate-cn
 keepalive 10 120
-compress
 max-clients 5
 user nobody
 group nogroup
@@ -118,14 +122,19 @@ proto udp
 remote $(curl http://ifconfig.co/ip) 1194
 resolv-retry infinite
 keepalive 10 120
+topology subnet
+pull
 nobind
 user nobody
 group nogroup
+tls-client
+tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
 cipher AES-256-CBC
+auth SHA512
 persist-key
 persist-tun
+auth-nocache
 remote-cert-tls server
-compress lz4
 verb 3
 key-direction 1
 <ca>

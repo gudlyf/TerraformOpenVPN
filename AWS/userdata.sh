@@ -1,12 +1,14 @@
 #!/bin/bash -x
 
+INTERFACE=$(route | grep '^default' | grep -o '[^ ]*$')
+
 echo "Starting Build Process"
 
 echo "Reset DNS settings ..."
 
 echo "supersede domain-name-servers 1.1.1.1, 9.9.9.9;" >> /etc/dhcp/dhclient.conf
 
-dhclient -r -v eth0 && rm /var/lib/dhcp/dhclient.* ; dhclient -v eth0
+dhclient -r -v $INTERFACE && rm /var/lib/dhcp/dhclient.* ; dhclient -v $INTERFACE
 
 echo "Adding official OpenVPN Distro ..."
 
@@ -33,8 +35,8 @@ echo "# START OPENVPN RULES
 # NAT table rules
 *nat
 :POSTROUTING ACCEPT [0:0]
-# Allow traffic from OpenVPN client to eth0
--A POSTROUTING -s 192.168.51.0/24 -o eth0 -j MASQUERADE
+# Allow traffic from OpenVPN client to $INTERFACE
+-A POSTROUTING -s 192.168.51.0/24 -o $INTERFACE -j MASQUERADE
 COMMIT
 # END OPENVPN RULES
 

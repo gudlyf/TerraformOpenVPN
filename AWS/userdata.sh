@@ -56,20 +56,22 @@ port 1194
 proto udp
 dev tun
 tls-server
-tls-auth ta.key 0
+tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
+cipher AES-256-CBC
+auth SHA512
+tls-crypt ta.key 0
+tls-version-min 1.2
 ca ca.crt
 cert server.crt
 key server.key
 dh dh2048.pem
-cipher AES-256-CBC
+topology subnet
 server 192.168.51.0 255.255.255.0
-ifconfig-pool-persist ipp.txt
 push "redirect-gateway def1 bypass-dhcp"
 push "dhcp-option DNS 1.1.1.1"
 push "dhcp-option DNS 9.9.9.9"
 duplicate-cn
 keepalive 10 120
-compress
 max-clients 5
 user nobody
 group nogroup
@@ -118,14 +120,19 @@ proto udp
 remote $(curl http://169.254.169.254/latest/meta-data/public-ipv4) 1194
 resolv-retry infinite
 keepalive 10 120
+topology subnet
+pull
 nobind
 user nobody
 group nogroup
+tls-client
+tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
 cipher AES-256-CBC
+auth SHA512
 persist-key
 persist-tun
+auth-nocache
 remote-cert-tls server
-compress lz4
 verb 3
 key-direction 1
 <ca>
@@ -137,9 +144,9 @@ $(cat /etc/openvpn/easy-rsa/keys/client.crt)
 <key>
 $(cat /etc/openvpn/easy-rsa/keys/client.key)
 </key>
-<tls-auth>
+<tls-crypt>
 $(cat /etc/openvpn/ta.key)
-</tls-auth>
+</tls-crypt>
 EOF
 
 chmod 444 /etc/openvpn/client.ovpn

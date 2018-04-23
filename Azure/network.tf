@@ -3,7 +3,7 @@ resource "azurerm_virtual_network" "vnet" {
   resource_group_name = "${azurerm_resource_group.rg.name}"
   address_space = ["192.168.50.0/24"]
   location = "${var.location}"
-  dns_servers = ["8.8.8.8", "8.8.4.4"]
+  dns_servers = ["1.1.1.1", "9.9.9.9"]
 }
 
 resource "azurerm_subnet" "GatewaySubnet" {

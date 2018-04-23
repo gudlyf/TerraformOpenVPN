@@ -119,7 +119,7 @@ cat > /etc/openvpn/client.ovpn <<EOF
 client
 dev tun
 proto udp
-remote $(curl http://ifconfig.co/ip) 1194
+remote $(curl -H Metadata:true "http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2017-08-01&format=text") 1194
 resolv-retry infinite
 keepalive 10 120
 topology subnet
@@ -146,9 +146,9 @@ $(cat /etc/openvpn/easy-rsa/keys/client.crt)
 <key>
 $(cat /etc/openvpn/easy-rsa/keys/client.key)
 </key>
-<tls-auth>
+<tls-crypt>
 $(cat /etc/openvpn/ta.key)
-</tls-auth>
+</tls-crypt>
 EOF
 
 chmod 444 /etc/openvpn/client.ovpn

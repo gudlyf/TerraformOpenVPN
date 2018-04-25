@@ -130,6 +130,7 @@ group nogroup
 tls-client
 tls-cipher TLS-ECDHE-RSA-WITH-AES-256-GCM-SHA384
 cipher AES-256-CBC
+auth SHA512
 persist-key
 persist-tun
 auth-nocache

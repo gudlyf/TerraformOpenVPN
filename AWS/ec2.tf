@@ -6,17 +6,12 @@ data "aws_ami" "ubuntu" {
     values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
   }
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
   owners = ["099720109477"]
 }
 
 resource "aws_instance" "ovpn" {
   ami           = "${data.aws_ami.ubuntu.id}"
-  instance_type = "t2.nano"
+  instance_type = "t3.nano"
 
   associate_public_ip_address = true
   source_dest_check           = false

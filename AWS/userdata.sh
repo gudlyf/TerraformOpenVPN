@@ -14,22 +14,39 @@ echo "Adding official OpenVPN Distro ..."
 
 wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg|apt-key add -
 
-echo "deb http://build.openvpn.net/debian/openvpn/stable `lsb_release -cs` main" > /etc/apt/sources.list.d/openvpn-aptrepo.list
+echo "deb http://build.openvpn.net/debian/openvpn/stable `lsb_release -cs` main" > /etc/apt/sources.list.d/openvpn.list
+
+echo "Update apt sources ..."
+echo "deb http://archive.ubuntu.com/ubuntu/ xenial main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial-updates main restricted
+deb http://archive.ubuntu.com/ubuntu/ xenial universe
+deb http://archive.ubuntu.com/ubuntu/ xenial-updates universe
+deb http://archive.ubuntu.com/ubuntu/ xenial multiverse
+deb http://archive.ubuntu.com/ubuntu/ xenial-updates multiverse
+deb http://archive.ubuntu.com/ubuntu/ xenial-backports main restricted universe multiverse" > /etc/apt/sources.list.d/ubuntu.list
 
 echo "Fully update ..."
 
-apt-get update && apt-get -y dist-upgrade
+unset UCF_FORCE_CONFFOLD
+export UCF_FORCE_CONFFNEW=YES
+ucf --purge /boot/grub/menu.lst
+
+export DEBIAN_FRONTEND=noninteractive
+apt update
+apt -o Dpkg::Options::="--force-confnew" --force-yes -fuy dist-upgrade
 
 echo "Install packages we need ..."
 
-apt-get -y install openvpn easy-rsa fail2ban
+apt -y install openvpn easy-rsa fail2ban unattended-upgrades
 
 echo "Enable and configure firewall ..."
 
-ufw enable
+ufw --force enable
 ufw default allow outgoing
 ufw allow ssh
 ufw allow 1194/udp
+
+TMPFILE=$(mktemp)
 
 echo "# START OPENVPN RULES
 # NAT table rules
@@ -38,9 +55,9 @@ echo "# START OPENVPN RULES
 # Allow traffic from OpenVPN client to $INTERFACE
 -A POSTROUTING -s 192.168.51.0/24 -o $INTERFACE -j MASQUERADE
 COMMIT
-# END OPENVPN RULES
+# END OPENVPN RULES" | cat - /etc/ufw/before.rules > $TMPFILE
 
-$(cat /etc/ufw/before.rules)" > /etc/ufw/before.rules
+mv -f $TMPFILE /etc/ufw/before.rules
 
 sed -i.bak s/DEFAULT_FORWARD_POLICY=\"DROP\"/DEFAULT_FORWARD_POLICY=\"ACCEPT\"/g /etc/default/ufw
 
@@ -152,5 +169,6 @@ $(cat /etc/openvpn/ta.key)
 EOF
 
 chmod 444 /etc/openvpn/client.ovpn
+
 
 echo "DONE!"

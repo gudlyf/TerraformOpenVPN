@@ -1,5 +1,5 @@
 resource "aws_security_group" "ovpn_sg" {
-  name        = "ovpn_sg"
+  name_prefix = "ovpn_sg-"
   description = "OpenVPN SG"
 
   ingress {
@@ -9,7 +9,7 @@ resource "aws_security_group" "ovpn_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-ingress {
+  ingress {
     from_port   = 1194
     to_port     = 1194
     protocol    = "udp"
@@ -22,5 +22,4 @@ ingress {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
 }

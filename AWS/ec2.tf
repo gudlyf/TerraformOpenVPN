@@ -10,16 +10,16 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_instance" "ovpn" {
-  ami           = "${data.aws_ami.ubuntu.id}"
+  ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.nano"
 
   associate_public_ip_address = true
   source_dest_check           = false
-  security_groups             = ["${aws_security_group.ovpn_sg.name}"]
+  security_groups             = [aws_security_group.ovpn_sg.name]
 
-  key_name = "${aws_key_pair.ec2-key.key_name}"
+  key_name = aws_key_pair.ec2-key.key_name
 
-  user_data = "${data.template_file.deployment_shell_script.rendered}"
+  user_data = data.template_file.deployment_shell_script.rendered
 
   provisioner "remote-exec" {
     inline = [
@@ -29,10 +29,10 @@ resource "aws_instance" "ovpn" {
     ]
 
     connection {
-      host        = "${aws_instance.ovpn.public_ip}"
+      host        = aws_instance.ovpn.public_ip
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file("${var.private_key_file}")}"
+      private_key = file(var.private_key_file)
       timeout     = "1m"
     }
   }
@@ -48,34 +48,35 @@ resource "aws_instance" "ovpn" {
     ]
 
     connection {
-      host        = "${aws_instance.ovpn.public_ip}"
+      host        = aws_instance.ovpn.public_ip
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file("${var.private_key_file}")}"
+      private_key = file(var.private_key_file)
       timeout     = "1m"
     }
   }
 
   provisioner "local-exec" {
     command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn"
-    when    = "destroy"
+    when    = destroy
   }
 
-  tags {
+  tags = {
     Name = "ovpn"
   }
 }
 
 data "template_file" "deployment_shell_script" {
-  template = "${file("userdata.sh")}"
+  template = file("userdata.sh")
 
-  vars {
-    cert_details       = "${file(var.cert_details)}"
-    client_config_name = "${var.client_config_name}"
+  vars = {
+    cert_details       = file(var.cert_details)
+    client_config_name = var.client_config_name
   }
 }
 
 resource "aws_key_pair" "ec2-key" {
   key_name_prefix = "ovpn-key-"
-  public_key      = "${file(var.public_key_file)}"
+  public_key      = file(var.public_key_file)
 }
+

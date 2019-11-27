@@ -8,7 +8,7 @@ echo "Reset DNS settings ..."
 
 echo "supersede domain-name-servers 1.1.1.1, 9.9.9.9;" >> /etc/dhcp/dhclient.conf
 
-dhclient -r -v $INTERFACE && rm /var/lib/dhcp/dhclient.* ; dhclient -v $INTERFACE
+dhclient -r -v ${INTERFACE} && rm /var/lib/dhcp/dhclient.* ; dhclient -v ${INTERFACE}
 
 echo "Adding official OpenVPN Distro ..."
 
@@ -52,12 +52,12 @@ echo "# START OPENVPN RULES
 # NAT table rules
 *nat
 :POSTROUTING ACCEPT [0:0]
-# Allow traffic from OpenVPN client to $INTERFACE
--A POSTROUTING -s 192.168.51.0/24 -o $INTERFACE -j MASQUERADE
+# Allow traffic from OpenVPN client to ${INTERFACE}
+-A POSTROUTING -s 192.168.51.0/24 -o ${INTERFACE}
 COMMIT
-# END OPENVPN RULES" | cat - /etc/ufw/before.rules > $TMPFILE
+# END OPENVPN RULES" | cat - /etc/ufw/before.rules > ${TMPFILE}
 
-mv -f $TMPFILE /etc/ufw/before.rules
+mv -f ${TMPFILE} /etc/ufw/before.rules
 
 sed -i.bak s/DEFAULT_FORWARD_POLICY=\"DROP\"/DEFAULT_FORWARD_POLICY=\"ACCEPT\"/g /etc/default/ufw
 

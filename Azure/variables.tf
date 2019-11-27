@@ -29,3 +29,4 @@ variable "client_config_name" {
 variable "cert_details" {
   default = "../cert_details"
 }
+

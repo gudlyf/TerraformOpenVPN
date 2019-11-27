@@ -5,7 +5,7 @@ resource "google_compute_network" "ovpn" {
 
 resource "google_compute_firewall" "ovpn" {
   name    = "ovpn-firewall"
-  network = "${google_compute_network.ovpn.name}"
+  network = google_compute_network.ovpn.name
 
   allow {
     protocol = "icmp"
@@ -23,3 +23,4 @@ resource "google_compute_firewall" "ovpn" {
 
   target_tags = ["ovpn"]
 }
+

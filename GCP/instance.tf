@@ -38,7 +38,7 @@ resource "google_compute_instance" "ovpn" {
     ]
 
     connection {
-      host        = google_compute_instance.ovpn.network_interface[0].access_config[0].assigned_nat_ip
+      host        = google_compute_instance.ovpn.network_interface[0].access_config[0].nat_ip
       type        = "ssh"
       user        = "ubuntu"
       private_key = file(var.private_key_file)
@@ -47,7 +47,7 @@ resource "google_compute_instance" "ovpn" {
   }
 
   provisioner "local-exec" {
-    command = "scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${google_compute_instance.ovpn.network_interface[0].access_config[0].assigned_nat_ip}:/etc/openvpn/client.ovpn ${var.client_config_path}/${var.client_config_name}.ovpn"
+    command = "scp -o StrictHostKeyChecking=no -i ${var.private_key_file} ubuntu@${google_compute_instance.ovpn.network_interface[0].access_config[0].nat_ip}:/etc/openvpn/client.ovpn ${var.client_config_path}/${var.client_config_name}.ovpn"
   }
 
   provisioner "remote-exec" {
@@ -57,7 +57,7 @@ resource "google_compute_instance" "ovpn" {
     ]
 
     connection {
-      host        = google_compute_instance.ovpn.network_interface[0].access_config[0].assigned_nat_ip
+      host        = google_compute_instance.ovpn.network_interface[0].access_config[0].nat_ip
       type        = "ssh"
       user        = "ubuntu"
       private_key = file(var.private_key_file)

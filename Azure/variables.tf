@@ -1,5 +1,5 @@
 variable "location" {
-  default = "Canada East"
+  default = "westus2"
 }
 
 variable "hostname" {
@@ -8,6 +8,20 @@ variable "hostname" {
 
 variable "admin_username" {
   default = "ubuntu"
+}
+
+# Variable to restrict SSH access by NSG ACL to internet IP of client running tf
+variable "restrict_ssh" {
+  description = "If set to true, restrict SSH by NSG ACL"
+  type        = bool
+  default     = true
+}
+
+# Variable to restrict VPN access by NSG ACL to internet IP of client running tf
+variable "restrict_vpn" {
+  description = "If set to true, restrict vpn by NSG ACL"
+  type        = bool
+  default     = true
 }
 
 variable "private_key_file" {

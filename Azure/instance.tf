@@ -14,7 +14,7 @@ resource "azurerm_virtual_machine" "openvpn" {
   storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
 
@@ -93,10 +93,10 @@ resource "azurerm_virtual_machine" "openvpn" {
     }
   }
 
-  provisioner "local-exec" {
-    command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn"
-    when    = destroy
-  }
+  #provisioner "local-exec" {
+  #  command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn"
+  #  when    = destroy
+  #}
 }
 
 data "template_file" "deployment_shell_script" {

@@ -8,7 +8,7 @@ echo "Reset DNS settings ..."
 
 echo "supersede domain-name-servers 1.1.1.1, 9.9.9.9;" >> /etc/dhcp/dhclient.conf
 
-dhclient -r -v ${INTERFACE} && rm /var/lib/dhcp/dhclient.* ; dhclient -v ${INTERFACE}
+dhclient -r -v $${INTERFACE} && rm /var/lib/dhcp/dhclient.* ; dhclient -v $${INTERFACE}
 
 echo "Adding official OpenVPN Distro ..."
 
@@ -35,8 +35,8 @@ echo "# START OPENVPN RULES
 # NAT table rules
 *nat
 :POSTROUTING ACCEPT [0:0]
-# Allow traffic from OpenVPN client to ${INTERFACE}
--A POSTROUTING -s 192.168.53.0/28 -o ${INTERFACE} -j MASQUERADE
+# Allow traffic from OpenVPN client to $${INTERFACE}
+-A POSTROUTING -s 192.168.53.0/28 -o $${INTERFACE} -j MASQUERADE
 COMMIT
 # END OPENVPN RULES
 

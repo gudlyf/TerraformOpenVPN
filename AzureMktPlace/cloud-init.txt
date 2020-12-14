@@ -1,0 +1,18 @@
+#cloud-config
+# Install updates
+package_update: true
+package_upgrade: true
+runcmd:
+- ovpn-init --batch --host ${domain_name_label}
+users:
+- default
+- name: openvpn
+chpasswd:
+  list:
+    - ${ovpnadmin_username}:${ovpnadmin_password}
+  expire: False
+power_state:
+  delay: now
+  mode: reboot
+  message: Rebooting the OS
+  condition: if [ -e /var/run/reboot-required ]; then exit 0; else exit 1; fi

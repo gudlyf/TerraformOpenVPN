@@ -10,14 +10,14 @@ resource "azurerm_subnet" "GatewaySubnet" {
   name                 = "GatewaySubnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefix       = "192.168.50.0/28"
+  address_prefixes     = ["192.168.50.0/28"]
 }
 
 resource "azurerm_subnet" "VPNSubnet" {
   name                 = "VPNSubnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefix       = "192.168.50.16/28"
+  address_prefixes     = ["192.168.50.16/28"]
 }
 
 resource "azurerm_network_security_group" "sg" {
@@ -33,7 +33,7 @@ resource "azurerm_network_security_group" "sg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = "*"
+    source_address_prefix      = var.restrict_ssh == true ? (jsondecode(data.http.geoipdata.body)).geoplugin_request : "*"
     destination_address_prefix = "*"
   }
 
@@ -45,23 +45,33 @@ resource "azurerm_network_security_group" "sg" {
     protocol                   = "Udp"
     source_port_range          = "*"
     destination_port_range     = "1194"
-    source_address_prefix      = "*"
+    source_address_prefix      = var.restrict_vpn == true ? (jsondecode(data.http.geoipdata.body)).geoplugin_request : "*"
+    
     destination_address_prefix = "*"
   }
+}
+
+resource "random_string" "dns-name" {
+  length = 4
+  upper = false
+  lower = true
+  number = true
+  special = false
 }
 
 resource "azurerm_public_ip" "pubip" {
   name                         = "${var.hostname}-public"
   resource_group_name          = azurerm_resource_group.rg.name
   location                     = var.location
-  public_ip_address_allocation = "static"
+  allocation_method            = "Static"
+  domain_name_label            = "openvpn${random_string.dns-name.result}"
 }
 
 resource "azurerm_network_interface" "nic" {
   name                      = var.hostname
   location                  = var.location
   resource_group_name       = azurerm_resource_group.rg.name
-  network_security_group_id = azurerm_network_security_group.sg.id
+  enable_ip_forwarding      = true
 
   ip_configuration {
     name                          = var.hostname

@@ -3,7 +3,7 @@ resource "azurerm_virtual_machine" "openvpn" {
   location              = var.location
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.nic.id]
-  vm_size               = "Standard_A0"
+  vm_size               = "Standard_B2s"
 
   # Uncomment this line to delete the OS disk automatically when deleting the VM
   delete_os_disk_on_termination = true
@@ -14,7 +14,7 @@ resource "azurerm_virtual_machine" "openvpn" {
   storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
 
@@ -93,10 +93,10 @@ resource "azurerm_virtual_machine" "openvpn" {
     }
   }
 
-  provisioner "local-exec" {
-    command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn"
-    when    = destroy
-  }
+  #provisioner "local-exec" {
+  #  command = "rm -f ${var.client_config_path}/${var.client_config_name}.ovpn"
+  #  when    = destroy
+  #}
 }
 
 data "template_file" "deployment_shell_script" {

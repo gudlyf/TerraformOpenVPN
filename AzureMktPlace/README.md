@@ -1,0 +1,3 @@
+# TerraformOpenVPN/AzureMktPlace
+This section uses the openvpn published Azure Marketplace image as a base, instead of a default linux image. Additionally, it's configuration is pretty 'vanilla' per the openvpn initialization script and mostly aligns with the setup documentation found here https://openvpn.net/vpn-server-resources/microsoft-azure-byol-appliance-quick-start-guide/.
+In addition to variables set in 'variables.tf' configuration details are also handled by cloud init config 'cloud-init.txt' and 'openvpncfg.txt' which are passed to the instance at boot. Tf builds it all and cloud-init runs 'ovpn-init --batch' which applies a default config using the info passed via userdata from 'openvpncfg.txt'

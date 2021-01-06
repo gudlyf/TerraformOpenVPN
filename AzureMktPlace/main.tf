@@ -1,9 +1,9 @@
 provider "azurerm" {
-  features{}
+  features {}
 }
 
 resource "azurerm_resource_group" "rg" {
-  name     = "vpn"
+  name     = "openvpn${random_string.dns-name.result}"
   location = var.location
 }
 
@@ -26,4 +26,15 @@ data "http" "geoipdata" {
   request_headers = {
     Accept = "application/json"
   }
+}
+
+# Generate random password for openvpnadmin
+resource "random_password" "ovpnadmin_password" {
+  length           = 16
+  min_upper        = 2
+  min_lower        = 2
+  min_special      = 2
+  number           = true
+  special          = true
+  override_special = "!@#$%&"
 }

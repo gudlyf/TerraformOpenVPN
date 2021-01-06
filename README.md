@@ -1,5 +1,5 @@
 # TerraformOpenVPN
-Terraform scripts to create a quick OpenVPN server in the cloud (AWS, Google (GCP), more to come). Can be trivially modified to work with other cloud providers.
+Terraform scripts to create a quick OpenVPN server in the cloud (AWS, Azure, Google (GCP), more to come). Can be trivially modified to work with other cloud providers.
 
 ## Steps for use
 
@@ -15,13 +15,14 @@ Terraform scripts to create a quick OpenVPN server in the cloud (AWS, Google (GC
 
 6. Edit your own `cert_details` (use `cert_details.sample` as template)
 7. In the cloud provider you're using, edit the region in `variables.tf` as needed (default is Canada).
-8. For GCP, be sure you've created a new project and noted it in `variables.tf`.
-9. cd to the cloud provider directory and perform a `terraform apply`.
-10. The new `.ovpn` file will be copied from new instance into `cert_details`. Open with your OpenVPN client.
+8. For Azure it will restrict SSH and VPN to your public ip by default, if otherwise needed set variables 'restrict_vpn' or 'restrict_ssh' in `variables.tf`.
+9. For GCP, be sure you've created a new project and noted it in `variables.tf`.
+10. cd to the cloud provider directory and perform a `terraform apply`.
+11. The new `.ovpn` file will be copied from new instance into `cert_details`. Open with your OpenVPN client.
 
 ## To Do
 
-- Flag for "only allow this IP to connect" to either SSH and/or OpenVPN.
+- (AWS/GCP) Flag for "only allow this IP to connect" to either SSH and/or OpenVPN.
 - Finish `fail2ban` configuration.
 - Better use of variables and file hierarchy to allow for a single variables file and one place to execute the `apply` command.
 - Enable this repository to be used as a module.

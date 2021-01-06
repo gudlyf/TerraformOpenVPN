@@ -1,0 +1,2 @@
+#public_hostname=${domain_name_label}
+admin_user=${ovpnadmin_username}

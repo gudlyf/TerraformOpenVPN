@@ -18,7 +18,7 @@ Terraform scripts to create a quick OpenVPN server in the cloud (AWS, Azure, Goo
 8. For Azure it will restrict SSH and VPN to your public ip by default, if otherwise needed set variables 'restrict_vpn' or 'restrict_ssh' in `variables.tf`.
 9. For GCP, be sure you've created a new project and noted it in `variables.tf`.
 10. cd to the cloud provider directory and perform a `terraform apply`.
-11. The new `.ovpn` file will be copied from new instance into `cert_details`. Open with your OpenVPN client.
+11. The new `.ovpn` file will be copied from new instance into `client_configs`. Open with your OpenVPN client.
 
 ## To Do
 

@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+      - run: terraform fmt -check -recursive -diff
+
+  validate:
+    name: Validate and test (${{ matrix.tool }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: [terraform, tofu]
+    steps:
+      - uses: actions/checkout@v7
+
+      - if: matrix.tool == 'terraform'
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
+
+      - if: matrix.tool == 'tofu'
+        uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_wrapper: false
+
+      - name: Validate
+        run: |
+          for d in modules/openvpn-config modules/aws modules/azure modules/gcp AWS Azure GCP AzureMktPlace; do
+            echo "::group::$d"
+            ${{ matrix.tool }} -chdir="$d" init -backend=false -input=false -no-color
+            ${{ matrix.tool }} -chdir="$d" validate -no-color
+            echo "::endgroup::"
+          done
+
+      - name: Test (mocked providers, no credentials)
+        run: |
+          for d in modules/openvpn-config modules/aws modules/azure modules/gcp; do
+            echo "::group::$d"
+            ${{ matrix.tool }} -chdir="$d" test -no-color
+            echo "::endgroup::"
+          done
+
+  tflint:
+    name: TFLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: terraform-linters/setup-tflint@v6
+      - run: tflint --init --config "$GITHUB_WORKSPACE/.tflint.hcl"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: tflint --recursive --config "$GITHUB_WORKSPACE/.tflint.hcl" --format compact
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: shellcheck modules/openvpn-config/files/openvpn-nat tests/integration/*.sh
+
+  docs:
+    name: Module docs up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run terraform-docs
+        run: |
+          for d in modules/openvpn-config modules/aws modules/azure modules/gcp; do
+            docker run --rm -u "$(id -u)" -v "$PWD:/w" -w /w quay.io/terraform-docs/terraform-docs:latest --config .terraform-docs.yml "$d"
+          done
+      - name: Check for changes
+        run: git diff --exit-code -- 'modules/*/README.md' || { echo "::error::Module READMEs are stale. Run terraform-docs (see CONTRIBUTING.md)."; exit 1; }
+
+  integration:
+    name: End-to-end (Docker)
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
+      - run: tests/integration/run.sh

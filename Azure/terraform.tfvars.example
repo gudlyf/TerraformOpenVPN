@@ -1,0 +1,20 @@
+# Copy to terraform.tfvars and adjust.
+
+# Or export ARM_SUBSCRIPTION_ID instead (az account show --query id -o tsv)
+# subscription_id = "00000000-0000-0000-0000-000000000000"
+
+location = "westus2"
+
+# clients = ["laptop", "phone"]
+
+# Restrict who can reach the VPN port (find your IP: curl -s https://checkip.amazonaws.com)
+# vpn_allowed_cidrs = ["203.0.113.4/32"]
+
+# Optional SSH access for troubleshooting
+# ssh_public_key_file = "../certs/ovpn.pub"
+# ssh_allowed_cidrs   = ["203.0.113.4/32"]
+
+# cert_subject = {
+#   organization = "Example Inc"
+#   country      = "US"
+# }

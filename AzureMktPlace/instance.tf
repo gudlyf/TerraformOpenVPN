@@ -1,82 +1,85 @@
-resource "azurerm_linux_virtual_machine" "openvpn" {
-  name                  = var.hostname
-  admin_username        = var.admin_username
-  location              = var.location
-  resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.nic.id]
-  size                  = "Standard_B2s"
-  custom_data           = data.template_cloudinit_config.config.rendered
-
-  admin_ssh_key {
-    username   = var.admin_username
-    public_key = file(var.public_key_file)
-  }
-
-  plan {
-    publisher = "openvpn"
-    product   = "openvpnas"
-    name      = "access_server_byol"
-  }
-
-  source_image_reference {
-    publisher = "openvpn"
-    offer     = "openvpnas"
-    sku       = "access_server_byol"
-    version   = "latest"
-  }
-
-  #This would be the vanilla image, not using this
-  #source_image_reference {
-  #  publisher = "Canonical"
-  #  offer     = "UbuntuServer"
-  #  sku       = "18.04-LTS"
-  #  version   = "latest"
-  #}
-
-  os_disk {
-    name                 = "${var.hostname}_os"
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
-  }
-
-  connection {
-    type        = "ssh"
-    host        = azurerm_public_ip.pubip.ip_address
-    user        = var.admin_username
-    private_key = file(var.private_key_file)
-  }
-
-}
-
-data "template_file" "cloudconfig" {
-  template = file("cloud-init.txt")
-  vars = {
-    ovpnadmin_password = random_password.ovpnadmin_password.result
-    ovpnadmin_username = var.ovpnadmin_username
-    domain_name_label  = azurerm_public_ip.pubip.fqdn
-  }
-}
-
-data "template_file" "openvpnconfig" {
-  template = file("openvpncfg.txt")
-  vars = {
-    domain_name_label  = azurerm_public_ip.pubip.fqdn
-    ovpnadmin_username = var.ovpnadmin_username
-  }
-}
-
-data "template_cloudinit_config" "config" {
+data "cloudinit_config" "this" {
   gzip          = true
   base64_encode = true
 
   part {
     content_type = "text/cloud-config"
-    content      = data.template_file.cloudconfig.rendered
+    content = "#cloud-config\n${yamlencode({
+      package_update  = true
+      package_upgrade = true
+      runcmd = [
+        ["ovpn-init", "--batch", "--host", azurerm_public_ip.this.fqdn],
+      ]
+      users = [
+        "default",
+        { name = var.ovpnadmin_username, lock_passwd = false },
+      ]
+      chpasswd = {
+        expire = false
+        users = [
+          { name = var.ovpnadmin_username, password = random_password.ovpnadmin.result, type = "text" },
+        ]
+      }
+      power_state = {
+        mode      = "reboot"
+        delay     = "now"
+        message   = "Rebooting to finish applying package upgrades"
+        condition = ["test", "-f", "/var/run/reboot-required"]
+      }
+    })}"
   }
 
+  # Access Server initial settings, read by the image on first boot.
   part {
     content_type = "text/plain"
-    content      = data.template_file.openvpnconfig.rendered
+    content = templatefile("${path.module}/openvpncfg.txt.tftpl", {
+      domain_name_label  = azurerm_public_ip.this.fqdn
+      ovpnadmin_username = var.ovpnadmin_username
+    })
+  }
+}
+
+resource "azurerm_linux_virtual_machine" "this" {
+  name                  = "vm-${var.name}"
+  computer_name         = var.name
+  location              = azurerm_resource_group.this.location
+  resource_group_name   = azurerm_resource_group.this.name
+  size                  = var.vm_size
+  admin_username        = var.admin_username
+  network_interface_ids = [azurerm_network_interface.this.id]
+  custom_data           = data.cloudinit_config.this.rendered
+
+  disable_password_authentication = true
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = local.ssh_public_key
   }
 
+  plan {
+    publisher = var.marketplace_image.publisher
+    product   = var.marketplace_image.offer
+    name      = var.marketplace_image.sku
+  }
+
+  source_image_reference {
+    publisher = var.marketplace_image.publisher
+    offer     = var.marketplace_image.offer
+    sku       = var.marketplace_image.sku
+    version   = var.marketplace_image.version
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "StandardSSD_LRS"
+  }
+
+  boot_diagnostics {}
+
+  tags = local.tags
+
+  depends_on = [
+    azurerm_marketplace_agreement.openvpnas,
+    azurerm_network_interface_security_group_association.this,
+  ]
 }

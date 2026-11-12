@@ -1,0 +1,14 @@
+[Unit]
+Description=NAT and forwarding rules for OpenVPN clients
+Wants=network-online.target
+After=network-online.target
+Before=openvpn-server@server.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/openvpn-nat start
+ExecStop=/usr/local/sbin/openvpn-nat stop
+
+[Install]
+WantedBy=multi-user.target

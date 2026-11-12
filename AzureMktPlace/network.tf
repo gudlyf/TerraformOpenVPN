@@ -1,121 +1,129 @@
-resource "azurerm_virtual_network" "vnet" {
-  name                = "OpenVPNVNet"
-  resource_group_name = azurerm_resource_group.rg.name
-  address_space       = ["192.168.50.0/24"]
-  location            = var.location
-  dns_servers         = ["1.1.1.1", "9.9.9.9"]
+resource "azurerm_virtual_network" "this" {
+  name                = "vnet-${var.name}"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = [var.vnet_cidr]
+  tags                = local.tags
 }
 
-resource "azurerm_subnet" "VPNSubnet" {
-  name                 = "VPNSubnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["192.168.50.16/28"]
+resource "azurerm_subnet" "this" {
+  name                            = "snet-${var.name}"
+  resource_group_name             = azurerm_resource_group.this.name
+  virtual_network_name            = azurerm_virtual_network.this.name
+  address_prefixes                = [var.subnet_cidr]
+  default_outbound_access_enabled = false
 }
 
-resource "azurerm_network_security_group" "sg" {
-  name                = "sg-openvpn"
-  location            = var.location
-  resource_group_name = azurerm_resource_group.rg.name
+resource "azurerm_network_security_group" "this" {
+  name                = "nsg-${var.name}"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = local.tags
 
   security_rule {
-    name                       = "PermitSSHInbound"
+    name                       = "AllowAdminUIInbound"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = var.restrict_ssh == true ? (jsondecode(data.http.geoipdata.body)).geoplugin_request : "*"
+    destination_port_range     = "943"
+    source_address_prefixes    = var.admin_allowed_cidrs
     destination_address_prefix = "*"
   }
 
   security_rule {
-    name                       = "PermitOpenVPNAdminInbound"
+    name                       = "AllowHTTPSInbound"
     priority                   = 110
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "943"
-    source_address_prefix      = var.restrict_ssh == true ? (jsondecode(data.http.geoipdata.body)).geoplugin_request : "*"
-    destination_address_prefix = "*"
-  }
-
-  security_rule {
-    name                       = "PermitOpen443Inbound"
-    priority                   = 120
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
     destination_port_range     = "443"
-    source_address_prefix      = var.restrict_vpn == true ? (jsondecode(data.http.geoipdata.body)).geoplugin_request : "*"
+    source_address_prefixes    = var.vpn_allowed_cidrs
     destination_address_prefix = "*"
   }
 
   security_rule {
-    name                       = "PermitOpen1194Inbound"
-    priority                   = 130
+    name                       = "AllowOpenVPNInbound"
+    priority                   = 120
     direction                  = "Inbound"
     access                     = "Allow"
     protocol                   = "Udp"
     source_port_range          = "*"
     destination_port_range     = "1194"
-    source_address_prefix      = var.restrict_vpn == true ? (jsondecode(data.http.geoipdata.body)).geoplugin_request : "*"
+    source_address_prefixes    = var.vpn_allowed_cidrs
     destination_address_prefix = "*"
   }
 
+  dynamic "security_rule" {
+    for_each = local.ssh_enabled ? [1] : []
+
+    content {
+      name                       = "AllowSSHInbound"
+      priority                   = 130
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "22"
+      source_address_prefixes    = var.ssh_allowed_cidrs
+      destination_address_prefix = "*"
+    }
+  }
 }
 
-resource "random_string" "dns-name" {
-  length  = 4
-  upper   = false
-  lower   = true
-  number  = true
-  special = false
-}
-
-resource "azurerm_public_ip" "pubip" {
-  name                = "${var.hostname}-public"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
+resource "azurerm_public_ip" "this" {
+  name                = "pip-${var.name}"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
   allocation_method   = "Static"
-  domain_name_label   = "openvpn${random_string.dns-name.result}"
+  sku                 = "Standard"
+  domain_name_label   = "${var.name}-${local.suffix}"
+  tags                = local.tags
 }
 
-resource "azurerm_network_interface" "nic" {
-  name                 = var.hostname
-  location             = var.location
-  resource_group_name  = azurerm_resource_group.rg.name
-  enable_ip_forwarding = true
+resource "azurerm_network_interface" "this" {
+  name                  = "nic-${var.name}"
+  location              = azurerm_resource_group.this.location
+  resource_group_name   = azurerm_resource_group.this.name
+  ip_forwarding_enabled = true # Access Server routes VPN client subnets
+  tags                  = local.tags
 
   ip_configuration {
-    name                          = var.hostname
-    subnet_id                     = azurerm_subnet.VPNSubnet.id
-    private_ip_address_allocation = "dynamic"
-    public_ip_address_id          = azurerm_public_ip.pubip.id
+    name                          = "primary"
+    subnet_id                     = azurerm_subnet.this.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.this.id
   }
 }
 
-resource "azurerm_route_table" "ovpn_route_table" {
-  name                          = "ovpnroutetable"
-  location                      = var.location
-  resource_group_name           = azurerm_resource_group.rg.name
-  disable_bgp_route_propagation = false
+# Standard SKU public IPs deny all inbound traffic unless an NSG allows it.
+resource "azurerm_network_interface_security_group_association" "this" {
+  network_interface_id      = azurerm_network_interface.this.id
+  network_security_group_id = azurerm_network_security_group.this.id
+}
 
-  route {
-    name                   = "ovpnroute1"
-    address_prefix         = "172.27.224.0/20"
-    next_hop_type          = "VirtualAppliance"
-    next_hop_in_ip_address = azurerm_network_interface.nic.private_ip_address
+# Lets other resources in the VNet reach VPN clients through Access Server.
+resource "azurerm_route_table" "this" {
+  name                = "rt-${var.name}"
+  location            = azurerm_resource_group.this.location
+  resource_group_name = azurerm_resource_group.this.name
+  tags                = local.tags
+
+  dynamic "route" {
+    for_each = var.vpn_client_cidrs
+
+    content {
+      name                   = "vpn-clients-${route.key}"
+      address_prefix         = route.value
+      next_hop_type          = "VirtualAppliance"
+      next_hop_in_ip_address = azurerm_network_interface.this.private_ip_address
+    }
   }
+}
 
-  route {
-    name                   = "ovpnroute2"
-    address_prefix         = "172.27.240.0/20"
-    next_hop_type          = "VirtualAppliance"
-    next_hop_in_ip_address = azurerm_network_interface.nic.private_ip_address
-  }
-
+resource "azurerm_subnet_route_table_association" "this" {
+  subnet_id      = azurerm_subnet.this.id
+  route_table_id = azurerm_route_table.this.id
 }

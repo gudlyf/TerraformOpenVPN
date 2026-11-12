@@ -1,0 +1,40 @@
+# OpenVPN server configuration. Managed by Terraform (TerraformOpenVPN).
+port ${port}
+proto ${protocol}
+dev tun
+topology subnet
+server ${network} ${netmask}
+
+ca ca.crt
+cert server.crt
+key server.key
+dh none
+tls-crypt tls-crypt.key
+tls-version-min 1.2
+data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305
+remote-cert-tls client
+
+# Only clients with a file in ccd/ (one per entry in var.clients) may connect.
+# Removing a client from Terraform removes its file and revokes access.
+client-config-dir ccd
+ccd-exclusive
+
+%{ if full_tunnel ~}
+push "redirect-gateway def1 bypass-dhcp"
+%{ endif ~}
+%{ for route in pushed_routes ~}
+push "route ${route.network} ${route.netmask}"
+%{ endfor ~}
+%{ for dns in dns_servers ~}
+push "dhcp-option DNS ${dns}"
+%{ endfor ~}
+
+keepalive 10 120
+%{ if protocol == "udp" ~}
+explicit-exit-notify 1
+%{ endif ~}
+user nobody
+group nogroup
+persist-key
+persist-tun
+verb 3

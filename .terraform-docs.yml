@@ -1,0 +1,20 @@
+formatter: markdown table
+
+output:
+  file: README.md
+  mode: inject
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: false
+  default: true
+  hide-empty: true
+  html: false
+  required: true
+  sensitive: true
+  type: true
+  # Lock files are not committed for modules; show constraints, not resolved versions.
+  lockfile: false

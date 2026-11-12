@@ -1,0 +1,20 @@
+name: Feature request
+description: Suggest an improvement or a new cloud.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: How would you like it to work?
+  - type: checkboxes
+    id: pr
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to open a pull request for this.

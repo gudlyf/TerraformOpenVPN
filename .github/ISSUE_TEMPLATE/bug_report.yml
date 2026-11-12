@@ -1,0 +1,43 @@
+name: Bug report
+description: Something doesn't deploy or doesn't connect.
+labels: [bug]
+body:
+  - type: dropdown
+    id: cloud
+    attributes:
+      label: Cloud
+      options: [AWS, Azure, GCP, AzureMktPlace, Other / module use]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you ran, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Error output or logs
+      description: |
+        Terraform errors, and if the server came up but OpenVPN didn't, the output of
+        `cloud-init status --long`, `/var/log/cloud-init-output.log` and
+        `journalctl -u openvpn-server@server`. Remove IPs and keys you don't want public.
+      render: shell
+  - type: input
+    id: tf
+    attributes:
+      label: Terraform / OpenTofu version
+      placeholder: Terraform v1.14.0
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: OpenVPN client and OS
+      placeholder: OpenVPN Connect 3.7 on macOS 26
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or tag of this repo

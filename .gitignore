@@ -1,14 +1,36 @@
-# Compiled files
+# Terraform
+.terraform/
 *.tfstate
 *.tfstate.*
-*.tfstate.backup
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+*.tfplan
+tfplan
 
-# Module directory
-.terraform/
+# Lock files are committed for the root configurations only.
+modules/**/.terraform.lock.hcl
+tests/**/.terraform.lock.hcl
 
-# Other
-certs/ovpn*
-client_configs/*.ovpn
+# Generated secrets
+certs/*
+!certs/README.md
+client_configs/*
+!client_configs/README.md
+
+# Legacy
 cert_details
-.idea/*
+account.json
+
+# Editors / OS
+.idea/
+.vscode/
 .DS_Store

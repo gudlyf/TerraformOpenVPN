@@ -1,0 +1,58 @@
+#!/bin/sh
+# Masquerade OpenVPN client traffic out of the instance's default-route
+# interface. Managed by Terraform (TerraformOpenVPN); installed via cloud-init.
+#
+# Usage: openvpn-nat [start|stop]
+# Reads VPN_CIDR from /etc/default/openvpn-nat.
+
+set -eu
+
+CONFIG_FILE="${OPENVPN_NAT_CONFIG:-/etc/default/openvpn-nat}"
+
+# shellcheck source=/dev/null
+. "$CONFIG_FILE"
+
+: "${VPN_CIDR:?VPN_CIDR must be set in $CONFIG_FILE}"
+
+iface=$(ip -4 route show default | awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }')
+
+if [ -z "$iface" ]; then
+  echo "openvpn-nat: no default IPv4 route found" >&2
+  exit 1
+fi
+
+# rule <table> <chain> <rule...>: add the rule if it is not already present.
+add_rule() {
+  table=$1
+  chain=$2
+  shift 2
+  iptables -t "$table" -C "$chain" "$@" 2>/dev/null || iptables -t "$table" -A "$chain" "$@"
+}
+
+# del_rule <table> <chain> <rule...>: remove the rule if present.
+del_rule() {
+  table=$1
+  chain=$2
+  shift 2
+  while iptables -t "$table" -C "$chain" "$@" 2>/dev/null; do
+    iptables -t "$table" -D "$chain" "$@"
+  done
+}
+
+case "${1:-start}" in
+  start)
+    add_rule nat POSTROUTING -s "$VPN_CIDR" -o "$iface" -j MASQUERADE
+    add_rule filter FORWARD -s "$VPN_CIDR" -o "$iface" -j ACCEPT
+    add_rule filter FORWARD -d "$VPN_CIDR" -i "$iface" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    echo "openvpn-nat: masquerading $VPN_CIDR via $iface"
+    ;;
+  stop)
+    del_rule nat POSTROUTING -s "$VPN_CIDR" -o "$iface" -j MASQUERADE
+    del_rule filter FORWARD -s "$VPN_CIDR" -o "$iface" -j ACCEPT
+    del_rule filter FORWARD -d "$VPN_CIDR" -i "$iface" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    ;;
+  *)
+    echo "usage: $0 [start|stop]" >&2
+    exit 2
+    ;;
+esac

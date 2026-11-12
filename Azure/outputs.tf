@@ -1,15 +1,30 @@
 output "public_ip" {
-  value = "The VPN Public IP Address: ${azurerm_public_ip.pubip.ip_address}"
+  description = "VPN server address."
+  value       = module.openvpn.public_ip
 }
 
-output "public_dns" {
-  value = "The VPN Public DNS: ${azurerm_public_ip.pubip.fqdn}"
+output "fqdn" {
+  description = "DNS name of the VPN server."
+  value       = module.openvpn.fqdn
 }
 
-output "restrict_ssh" {
-  value = var.restrict_ssh == true ? "SSH access has been restricted to requests from IP ${(jsondecode(data.http.geoipdata.body)).geoplugin_request}" : "SSH Access has NOT been restricted and is open to the entire internet"
+output "client_config_files" {
+  description = "Client profiles written to disk. Import these into your OpenVPN client."
+  value       = module.openvpn.client_config_files
 }
 
-output "restrict_vpn" {
-  value = var.restrict_vpn == true ? "VPN access has been restricted to requests from IP ${(jsondecode(data.http.geoipdata.body)).geoplugin_request}" : "VPN Access has NOT been restricted and is open to the entire internet"
+output "client_configs" {
+  description = "Client profile contents (terraform output -json client_configs)."
+  value       = module.openvpn.client_configs
+  sensitive   = true
+}
+
+output "ssh_command" {
+  description = "SSH command for the server, or null when SSH is disabled."
+  value       = module.openvpn.ssh_command
+}
+
+output "next_steps" {
+  description = "What to do after apply."
+  value       = "The server finishes installing OpenVPN 2-5 minutes after apply. Then import the .ovpn file(s) listed in client_config_files into your OpenVPN client."
 }

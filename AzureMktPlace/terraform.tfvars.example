@@ -1,0 +1,18 @@
+# Copy to terraform.tfvars and adjust.
+
+# Or export ARM_SUBSCRIPTION_ID instead (az account show --query id -o tsv)
+# subscription_id = "00000000-0000-0000-0000-000000000000"
+
+location = "westus2"
+
+# Required: who may open the admin UI (find your IP: curl -s https://checkip.amazonaws.com)
+admin_allowed_cidrs = ["203.0.113.4/32"]
+
+# vpn_allowed_cidrs = ["0.0.0.0/0"]
+
+# Accept the marketplace terms with Terraform (only needed once per subscription)
+# accept_marketplace_terms = true
+
+# Optional SSH access
+# ssh_public_key_file = "../certs/ovpn.pub"
+# ssh_allowed_cidrs   = ["203.0.113.4/32"]

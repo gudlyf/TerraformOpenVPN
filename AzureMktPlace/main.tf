@@ -1,40 +1,52 @@
 provider "azurerm" {
   features {}
+
+  subscription_id = var.subscription_id
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "openvpn${random_string.dns-name.result}"
-  location = var.location
+locals {
+  tags        = merge({ ManagedBy = "terraform", Project = "TerraformOpenVPN" }, var.tags)
+  suffix      = random_string.suffix.result
+  ssh_enabled = var.ssh_public_key_file != null && length(var.ssh_allowed_cidrs) > 0
+  ssh_public_key = (
+    var.ssh_public_key_file == null
+    ? tls_private_key.placeholder.public_key_openssh
+    : file(pathexpand(var.ssh_public_key_file))
+  )
 }
 
-terraform {
-  required_version = ">= 0.12"
+resource "random_string" "suffix" {
+  length  = 6
+  upper   = false
+  special = false
 }
 
-/* # This somehow started erroring on me after it worked before, not sure why so not using this, but leaving it in as an alternate option
-# Grab current source internet ip to use for nsg
-data "http" "myextip" {
-url = "http://v4.ident.me"
-}
-*/
-
-# Grab current source internet ip to use for nsg
-data "http" "geoipdata" {
-  url = "http://www.geoplugin.net/json.gp"
-
-  # Optional request headers
-  request_headers = {
-    Accept = "application/json"
-  }
-}
-
-# Generate random password for openvpnadmin
-resource "random_password" "ovpnadmin_password" {
-  length           = 16
+resource "random_password" "ovpnadmin" {
+  length           = 20
   min_upper        = 2
   min_lower        = 2
+  min_numeric      = 2
   min_special      = 2
-  number           = true
-  special          = true
-  override_special = "!@#$%&"
+  override_special = "!@#%^*-_=+"
+}
+
+# Azure Linux VMs require an SSH key or password. When no key is supplied we
+# register a generated one that nobody keeps, and SSH stays closed.
+resource "tls_private_key" "placeholder" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "azurerm_resource_group" "this" {
+  name     = "rg-${var.name}-${local.suffix}"
+  location = var.location
+  tags     = local.tags
+}
+
+resource "azurerm_marketplace_agreement" "openvpnas" {
+  count = var.accept_marketplace_terms ? 1 : 0
+
+  publisher = var.marketplace_image.publisher
+  offer     = var.marketplace_image.offer
+  plan      = var.marketplace_image.sku
 }

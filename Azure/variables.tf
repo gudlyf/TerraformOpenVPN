@@ -1,46 +1,95 @@
+variable "subscription_id" {
+  description = "Azure subscription ID. Null falls back to the ARM_SUBSCRIPTION_ID environment variable."
+  type        = string
+  default     = null
+}
+
 variable "location" {
-  default = "westus2"
+  description = "Azure region."
+  type        = string
+  default     = "westus2"
 }
 
-variable "hostname" {
-  default = "openvpn"
+variable "vm_size" {
+  description = "VM size."
+  type        = string
+  default     = "Standard_B2s"
 }
 
-variable "admin_username" {
-  default = "ubuntu"
+variable "name" {
+  description = "Name prefix for all resources."
+  type        = string
+  default     = "openvpn"
 }
 
-# Variable to restrict SSH access by NSG ACL to internet IP of client running tf
-variable "restrict_ssh" {
-  description = "If set to true, restrict SSH by NSG ACL"
+variable "clients" {
+  description = "Client names to issue .ovpn profiles for. Removing a name revokes that client."
+  type        = set(string)
+  default     = ["client"]
+}
+
+variable "vpn_port" {
+  description = "Port OpenVPN listens on."
+  type        = number
+  default     = 1194
+}
+
+variable "vpn_protocol" {
+  description = "\"udp\" (recommended) or \"tcp\"."
+  type        = string
+  default     = "udp"
+}
+
+variable "vpn_cidr" {
+  description = "IPv4 network handed out to VPN clients."
+  type        = string
+  default     = "10.8.0.0/24"
+}
+
+variable "dns_servers" {
+  description = "DNS servers pushed to clients."
+  type        = list(string)
+  default     = ["1.1.1.1", "9.9.9.9"]
+}
+
+variable "full_tunnel" {
+  description = "Route all client traffic through the VPN."
   type        = bool
   default     = true
 }
 
-# Variable to restrict VPN access by NSG ACL to internet IP of client running tf
-variable "restrict_vpn" {
-  description = "If set to true, restrict vpn by NSG ACL"
-  type        = bool
-  default     = true
+variable "vpn_allowed_cidrs" {
+  description = "IPv4 CIDR blocks allowed to reach the VPN port."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
 }
 
-variable "private_key_file" {
-  default = "../certs/ovpn"
+variable "ssh_public_key_file" {
+  description = "Path to an OpenSSH public key to install (optional), e.g. \"../certs/ovpn.pub\"."
+  type        = string
+  default     = null
 }
 
-variable "public_key_file" {
-  default = "../certs/ovpn.pub"
+variable "ssh_allowed_cidrs" {
+  description = "IPv4 CIDR blocks allowed to SSH to the server. Empty means port 22 is closed."
+  type        = list(string)
+  default     = []
 }
 
-variable "client_config_path" {
-  default = "../client_configs"
+variable "cert_subject" {
+  description = "Certificate subject fields (organization, organizational_unit, country, province, locality)."
+  type = object({
+    organization        = optional(string, "TerraformOpenVPN")
+    organizational_unit = optional(string)
+    country             = optional(string)
+    province            = optional(string)
+    locality            = optional(string)
+  })
+  default = {}
 }
 
-variable "client_config_name" {
-  default = "azure-ovpn-client"
+variable "client_config_dir" {
+  description = "Directory the .ovpn files are written to. Set to null to skip writing files."
+  type        = string
+  default     = "../client_configs"
 }
-
-variable "cert_details" {
-  default = "../cert_details"
-}
-

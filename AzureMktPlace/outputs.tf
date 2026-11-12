@@ -1,27 +1,40 @@
 output "public_ip" {
-  value = "The VPN Public IP Address: ${azurerm_public_ip.pubip.ip_address}"
+  description = "Public IP address of Access Server."
+  value       = azurerm_public_ip.this.ip_address
 }
 
-output "public_dns" {
-  value = "The VPN Public DNS: ${azurerm_public_ip.pubip.fqdn}"
-}
-
-output "restrict_ssh" {
-  value = var.restrict_ssh == true ? "SSH access has been restricted to requests from IP ${(jsondecode(data.http.geoipdata.body)).geoplugin_request}" : "SSH Access has NOT been restricted and is open to the entire internet"
-}
-
-output "restrict_vpn" {
-  value = var.restrict_vpn == true ? "VPN access has been restricted to requests from IP ${(jsondecode(data.http.geoipdata.body)).geoplugin_request}" : "VPN Access has NOT been restricted and is open to the entire internet"
+output "fqdn" {
+  description = "DNS name of Access Server."
+  value       = azurerm_public_ip.this.fqdn
 }
 
 output "admin_url" {
-  value = "The VPN admin console url is: https://${azurerm_public_ip.pubip.fqdn}:943/admin"
+  description = "Access Server admin UI."
+  value       = "https://${azurerm_public_ip.this.fqdn}:943/admin"
 }
 
-output "admin_info" {
-  value = "The VPN admin username is:${var.ovpnadmin_username} with password of:${random_password.ovpnadmin_password.result}"
+output "client_url" {
+  description = "Access Server client web UI (download profiles and apps here)."
+  value       = "https://${azurerm_public_ip.this.fqdn}/"
 }
 
-output "be_patient" {
-  value = "Cloud-init will bootstrap and restart the machine if needed so the vm will take 1-10 mins to be ready"
+output "admin_username" {
+  description = "Admin UI username."
+  value       = var.ovpnadmin_username
+}
+
+output "admin_password" {
+  description = "Admin UI password. Read it with: terraform output -raw admin_password"
+  value       = random_password.ovpnadmin.result
+  sensitive   = true
+}
+
+output "ssh_command" {
+  description = "SSH command for the VM, or null when SSH is disabled."
+  value       = local.ssh_enabled ? "ssh ${var.admin_username}@${azurerm_public_ip.this.ip_address}" : null
+}
+
+output "next_steps" {
+  description = "What to do after apply."
+  value       = "cloud-init configures Access Server and may reboot the VM; allow 5-10 minutes before opening admin_url. Get the password with: terraform output -raw admin_password"
 }

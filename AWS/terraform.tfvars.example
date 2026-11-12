@@ -1,0 +1,18 @@
+# Copy to terraform.tfvars and adjust. All values are optional.
+
+region = "ca-central-1"
+# profile = "my-profile"
+
+# clients = ["laptop", "phone"]
+
+# Restrict who can reach the VPN port (find your IP: curl -s https://checkip.amazonaws.com)
+# vpn_allowed_cidrs = ["203.0.113.4/32"]
+
+# Optional SSH access for troubleshooting
+# ssh_public_key_file = "../certs/ovpn.pub"
+# ssh_allowed_cidrs   = ["203.0.113.4/32"]
+
+# cert_subject = {
+#   organization = "Example Inc"
+#   country      = "US"
+# }
